@@ -10,7 +10,7 @@ Makeathon is a 48-hour virtual challenge in which motivated students and young p
 
 ![This is our team](tum-team.jpeg)
 
-## Connect with our Team : Databled
+## Connect with our Team : Techmakers
 
 - [Shivangi Singh](https://www.linkedin.com/in/shivangi-singh-59a8b779/)
 - [Berkay Alan](https://www.linkedin.com/in/berkayalan/)
