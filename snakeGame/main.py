@@ -1,9 +1,14 @@
+
 import math
 import random
 import cvzone
 import cv2
 import numpy as np
+import pygame
 from cvzone.HandTrackingModule import HandDetector
+import speech_recognition as sr
+from pygame import mixer
+import pygame as pg
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 1280)
@@ -13,25 +18,49 @@ detector = HandDetector(detectionCon=0.8, maxHands=1)
 
 
 class SnakeGameClass:
-    def __init__(self, pathFood):
+    def __init__(self, pathFood, obsPath):
         self.points = []  # all points of the snake
         self.lengths = []  # distance between each point
         self.currentLength = 0  # total length of the snake
         self.allowedLength = 150  # total allowed Length
         self.previousHead = 0, 0  # previous head point
 
+        # Food
         self.imgFood = cv2.imread(pathFood, cv2.IMREAD_UNCHANGED)
         self.hFood, self.wFood, _ = self.imgFood.shape
         self.foodPoint = 0, 0
-        self.randomFoodLocation()
+        self.random_food_location()
 
+        # obstacle
+        self.imgObs = cv2.imread(obsPath, cv2.IMREAD_UNCHANGED)
+        self.hObs, self.wObs, _ = self.imgObs.shape
+        self.obsPoint = 0, 0
+        self.random_obstacle_location()
+
+        # scores
         self.score = 0
         self.gameOver = False
 
-    def randomFoodLocation(self):
+        pg.init()
+        pg.time.set_timer(pg.USEREVENT + 1, 5000)
+        # for event in pygame.event.get():
+        #     if event.type == USEREVENT + 1:
+        #         functionName()
+        #     if event.type == QUIT:
+        #         pygame.quite()
+        #         sys.exit()
+
+    def random_food_location(self):
         self.foodPoint = random.randint(100, 1000), random.randint(100, 600)
 
+    def random_obstacle_location(self):
+        self.obsPoint = random.randint(100, 1000), random.randint(100, 600)
+
     def update(self, imgMain, currentHead):
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pg.USEREVENT + 1:
+                self.random_obstacle_location()
 
         if self.gameOver:
             cvzone.putTextRect(imgMain, "Game Over", [300, 400],
@@ -59,12 +88,18 @@ class SnakeGameClass:
 
             # Check if snake ate the Food
             rx, ry = self.foodPoint
-            if rx - self.wFood // 2 < cx < rx + self.wFood // 2 and \
-                    ry - self.hFood // 2 < cy < ry + self.hFood // 2:
-                self.randomFoodLocation()
+            if rx - self.wFood // 2 < cx < rx + self.wFood // 2 and ry - self.hFood // 2 < cy < ry + self.hFood // 2:
+                self.random_food_location()
+
                 self.allowedLength += 50
                 self.score += 1
                 print(self.score)
+
+            ox, oy = self.obsPoint
+            if ox - self.wObs // 2 < cx < ox + self.wObs // 2 and oy - self.hObs // 2 < cy < oy + self.hObs // 2:
+                print("we are in the if")
+                # self.random_obstacle_location()
+                self.gameOver = True
 
             # Draw Snake
             if self.points:
@@ -80,6 +115,9 @@ class SnakeGameClass:
             cvzone.putTextRect(imgMain, f'Score: {self.score}', [50, 80],
                                scale=3, thickness=3, offset=10)
 
+            # Draw Obstacle
+            imgMain = cvzone.overlayPNG(imgMain, self.imgObs, (ox - self.wObs // 2, oy - self.hObs // 2))
+
             # Check for Collision
             pts = np.array(self.points[:-2], np.int32)
             pts = pts.reshape((-1, 1, 2))
@@ -94,23 +132,116 @@ class SnakeGameClass:
                 self.currentLength = 0  # total length of the snake
                 self.allowedLength = 150  # total allowed Length
                 self.previousHead = 0, 0  # previous head point
-                self.randomFoodLocation()
+                self.random_food_location()
 
         return imgMain
 
 
-game = SnakeGameClass("./data/coffee.png")
+def recognize_speech_from_mic(recognizer, microphone):
+    """Transcribe speech from recorded from `microphone`.
+    Returns a dictionary with three keys:
+    "success": a boolean indicating whether or not the API request was
+               successful
+    "error":   `None` if no error occured, otherwise a string containing
+               an error message if the API could not be reached or
+               speech was unrecognizable
+    "transcription": `None` if speech could not be transcribed,
+               otherwise a string containing the transcribed text
+    """
+    # check that recognizer and microphone arguments are appropriate type
+    if not isinstance(recognizer, sr.Recognizer):
+        raise TypeError("`recognizer` must be `Recognizer` instance")
 
-while True:
-    success, img = cap.read()
-    img = cv2.flip(img, 1)
-    hands, img = detector.findHands(img, flipType=False)
+    if not isinstance(microphone, sr.Microphone):
+        raise TypeError("`microphone` must be `Microphone` instance")
 
-    if hands:
-        lmList = hands[0]['lmList']
-        pointIndex = lmList[8][0:2]
-        img = game.update(img, pointIndex)
-    cv2.imshow("Image", img)
-    key = cv2.waitKey(1)
-    if key == ord('r'):
-        game.gameOver = False
+    # adjust the recognizer sensitivity to ambient noise and record audio
+    # from the microphone
+    with microphone as source:
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+
+    # set up the response object
+    response = {
+        "success": True,
+        "error": None,
+        "transcription": None
+    }
+
+    # try recognizing the speech in the recording
+    # if a RequestError or UnknownValueError exception is caught,
+    #     update the response object accordingly
+    try:
+        response["transcription"] = recognizer.recognize_google(audio)
+    except sr.RequestError:
+        # API was unreachable or unresponsive
+        response["success"] = False
+        response["error"] = "API unavailable"
+    except sr.UnknownValueError:
+        # speech was unintelligible
+        response["error"] = "Unable to recognize speech"
+
+    return response
+
+
+game = SnakeGameClass("./data/coffee.png", "./data/Donut.png") # arg1 = food image, arg2 = obstacle image
+
+if __name__ == "__main__":
+
+    # Voice recognition
+    # Starting the mixer
+    mixer.init()
+
+    # Loading the song
+    mixer.music.load("./data/Tada-sound.mp3")
+
+    # Setting the volume
+    mixer.music.set_volume(0.7)
+
+    # Start playing the song
+    mixer.music.play()
+
+    # set the list of words, max number of guesses, and prompt limit
+    WORDS = ["art", "start", "begin", "play"]
+    recognizer = sr.Recognizer()
+    microphone = sr.Microphone()
+
+    while True:
+        # create recognizer and mic instances
+        guess = recognize_speech_from_mic(recognizer, microphone)
+        guess_is_correct = False
+        print(guess)
+
+        # keep checking till words in WORDS
+        if guess["transcription"]:
+            if guess["transcription"].lower() in WORDS:
+                guess_is_correct = True
+                break
+
+    NUM_GUESSES = 3
+    PROMPT_LIMIT = 5
+
+    if guess_is_correct:
+        guess_is_correct = False
+        run = True
+        while run:
+            success, img = cap.read()
+            img = cv2.flip(img, 1)
+            hands, img = detector.findHands(img, flipType=False)
+
+            if hands:
+                lmList = hands[0]['lmList']
+                pointIndex = lmList[8][0:2]
+                img = game.update(img, pointIndex)
+            cv2.imshow("Image", img)
+            key = cv2.waitKey(1)
+
+            # guess = recognize_speech_from_mic(recognizer, microphone)
+            #
+            # if guess["transcription"]:
+            #     guess_is_correct = guess["transcription"].lower() == "stop"
+            # if guess_is_correct:
+            #     run = False
+
+            if key == ord('r'):
+                game.gameOver = False
