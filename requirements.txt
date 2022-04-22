@@ -4,3 +4,6 @@ conda install jupyter
 conda install -c conda-forge speechrecognition    or      pip3 install SpeechRecognition
 conda install -c conda-forge -y numpy pandas matplotlib scipy scikit-learn jupyter jupyterlab
 conda install -c conda-forge opencv
+pip install pipwin
+pipwin install pyaudio
+pip install pygame
