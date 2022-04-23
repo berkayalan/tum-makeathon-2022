@@ -1,5 +1,7 @@
 import math
 import random
+import sys
+
 import cvzone
 import cv2
 import numpy as np
@@ -8,7 +10,12 @@ from cvzone.HandTrackingModule import HandDetector
 import speech_recognition as sr
 from pygame import mixer
 import pygame as pg
-from network import Network
+#import startmenu
+
+
+
+
+#from network import Network
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 1280)
@@ -45,6 +52,7 @@ class SnakeGameClass:
 
         pg.init()
         pg.time.set_timer(pg.USEREVENT + 1, 5000)
+
         # for event in pygame.event.get():
         #     if event.type == USEREVENT + 1:
         #         functionName()
@@ -58,22 +66,32 @@ class SnakeGameClass:
     def random_obstacle_location(self):
         self.obsPoint = random.randint(100, 1000), random.randint(100, 600)
 
-    def punch(self, imgMain, leftIndex):
+    def punch(self, imgMain, leftIndex, hand):
+        sum_open_fingers = sum(detector.fingersUp(hand))
+        print(type(sum_open_fingers))
 
-        # # # Draw Obstacle
-        # ox, oy = self.obsPoint
-        # imgMain = cvzone.overlayPNG(imgMain, self.imgObs, (ox - self.wObs // 2, oy - self.hObs // 2))
+
+        # # Draw Obstacle
+        ox, oy = self.obsPoint
+        imgMain = cvzone.overlayPNG(imgMain, self.imgObs, (ox - self.wObs // 2, oy - self.hObs // 2))
+
         # Check if obstacle is caught
         cx, cy = leftIndex
-        rx, ry = self.obsPoint
+
+        # Draw obstacle score
+        cvzone.putTextRect(imgMain, f'ObstacleScore: {self.obsScore}', [800, 80], colorR=(255, 0, 0), scale=3,
+                           thickness=3, offset=10)
+
         # catch obstacles
-        if rx - self.wObs // 2 < cx < rx + self.wObs // 2 and ry - self.hObs // 2 < cy < ry + self.hObs // 2:
+        if (ox - self.wObs // 2 < cx < ox + self.wObs // 2) and (oy - self.hObs // 2 < cy < oy + self.hObs // 2) and sum_open_fingers<3:
             self.random_obstacle_location()
             self.obsScore += 1
             print(self.obsScore)
 
-        if self.gameOver:
-            self.obsScore = 0
+
+
+        # if self.gameOver:
+        #     self.obsScore = 0
 
 
         return imgMain
@@ -84,9 +102,9 @@ class SnakeGameClass:
         for event in events:
             if event.type == pg.USEREVENT + 1:
                 self.random_obstacle_location()
+            if event.type == pygame.QUIT:
+                pygame.quit()
 
-        nl = '\n'
-        scores = [self.score, self.obsScore]
 
         if self.gameOver:
             cvzone.putTextRect(imgMain, "Game Over", [250, 300],
@@ -161,7 +179,7 @@ class SnakeGameClass:
             minDist = cv2.pointPolygonTest(pts, (cx, cy), True)
             print(minDist)
 
-            if -0.5 <= minDist <= 0.5:
+            if -1 <= minDist <= 1:
                 print("Hit")
                 self.gameOver = True
                 self.points = []  # all points of the snake
@@ -171,11 +189,10 @@ class SnakeGameClass:
                 self.previousHead = 0, 0  # previous head point
                 self.random_food_location()
 
-            # game over if we hit obstacle
 
+            # game over if we hit obstacle
             if ox - self.wObs // 2 < cx < ox + self.wObs // 2 and oy - self.hObs // 2 < cy < oy + self.hObs // 2:
                 print("we are in the if")
-                self.obsScore = 0
                 # self.random_obstacle_location()
                 self.gameOver = True
 
@@ -238,10 +255,11 @@ def recognize_speech_from_mic(recognizer, microphone):
     return response
 
 
-game = SnakeGameClass("./data/coffee.png", "./data/Donut.png") # arg1 = food image, arg2 = obstacle image
+game = SnakeGameClass("./data/coffee.png", "./data/ipip-05resize.png") # arg1 = food image, arg2 = obstacle image
 
-if __name__ == "__main__":
 
+
+def snakeMain():
 
     # Voice recognition
     # Starting the mixer
@@ -256,15 +274,17 @@ if __name__ == "__main__":
     # Start playing the song
     mixer.music.play()
 
+
     # set the list of words, max number of guesses, and prompt limit
     WORDS = ["art", "start", "begin", "play"]
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()
 
+
     while True:
         # create recognizer and mic instances
         guess = recognize_speech_from_mic(recognizer, microphone)
-        guess_is_correct = False
+        guess_is_correct  = False
         print(guess)
 
         # keep checking till words in WORDS
@@ -277,8 +297,11 @@ if __name__ == "__main__":
     PROMPT_LIMIT = 5
 
 
+
+    #guess_is_correct = True # remove if you uncomment sound
+
     if guess_is_correct:
-        guess_is_correct = False
+        guess_is_correct  = False
         run = True
         while run:
             success, img = cap.read()
@@ -287,9 +310,11 @@ if __name__ == "__main__":
 
             for hand in hands:
                 if hand['type'] == 'Left':
+
                     lmList = hand['lmList']
                     leftIndex = lmList[8][0:2]
-                    img = game.punch(img,hand['center'])
+                    img = game.punch(img, hand['center'], hand)
+                    #img = game.punch(img, hand)
                     print (" yes left")
                 if hand['type'] == 'Right':
                     lmList = hand['lmList']
@@ -316,3 +341,14 @@ if __name__ == "__main__":
 
             if key == ord('r'):
                 game.gameOver = False
+                game.score = 0
+                game.obsScore = 0
+
+            if key == ord('q'):
+                cv2.destroyAllWindows()
+                cv2.waitKey(1)
+
+
+if __name__ == '__main__':
+    #startmenu.game_intro()
+    snakeMain()
