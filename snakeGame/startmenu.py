@@ -40,10 +40,10 @@ def game_intro():
         # base.game_loop()
 
         # Start Menu Buttons
-        text.button(base.gameDisplay, "Play",300, 100, 200, 75, colours.lightgray, colours.gray, base.game_loop)
-        text.button(base.gameDisplay, "Instructions", 300, 200, 200, 75, colours.lightgray, colours.gray, controls.instructions)
-        # text.button(base.gameDisplay, "Leaderboard", 300, 300, 200, 75, colours.lightgray, colours.gray, leaderboard.display_leaderboard)
-        text.button(base.gameDisplay, "Quit", 300, 400, 200, 75, colours.lightgray, colours.gray, base.quitgame)
+        text.button(base.gameDisplay, "Play",180, 50, 200, 75, colours.white, colours.light_blue, base.game_loop)
+        text.button(base.gameDisplay, "Instructions", 420, 50, 200, 75, colours.white, colours.light_blue, controls.instructions)
+        text.button(base.gameDisplay, "Leaderboard", 420, 465, 200, 75, colours.white, colours.light_blue, leaderboard.display_leaderboard)
+        text.button(base.gameDisplay, "Quit", 180, 465, 200, 75, colours.white, colours.light_blue, base.quitgame)
 
         pygame.display.update()
         base.clock.tick(45)

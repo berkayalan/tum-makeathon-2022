@@ -12,7 +12,7 @@ def getkey(item):
 def display_leaderboard():
     display = True
     box_height = 500
-    box_width = 400
+    box_width = 450
 
     while display:
         for event in pygame.event.get():
@@ -37,7 +37,7 @@ def display_leaderboard():
         top_10 = scores[:10]
 
         box = pygame.surface.Surface((box_width, box_height))
-        box.fill(colours.lightgray)
+        box.fill(colours.white)
 
         # Leaderboard title
         textSurf, textRect = text.text_objects("Leaderboard", text.smallText, colours.black)
@@ -58,7 +58,7 @@ def display_leaderboard():
             scoreRect.centery = (30 * i + 100)
             box.blit(scoreSurf, scoreRect)
 
-        text.button(base.gameDisplay, "Back", 50, 500, 100, 50, colours.lightgray, colours.gray, startmenu.game_intro)
+        text.button(base.gameDisplay, "Back", 50, 500, 100, 50, colours.white, colours.light_blue, startmenu.game_intro)
 
         pygame.draw.rect(box, colours.black, (0, 0, box_width, box_height), 3)
         base.gameDisplay.blit(box, text.center_box(box_width, box_height, base.display_width, base.display_height))

@@ -1,7 +1,6 @@
 # Highscore Leaderboard
-rekt,11
-david,31
-very unlucky ,1
-misha,37
-Grace K.,18
-david,5
+Snake Pro,11
+Grandma Ellie,31
+Cookiemonster ,1
+Coffee Zombie,37
+YOU,18

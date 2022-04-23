@@ -4,6 +4,11 @@ import text
 import base
 import startmenu
 import time
+import pandas as pd
+import numpy as np
+
+import plotly.express as px
+import plotly.graph_objects as go
 
 pygame.init()
 
@@ -56,8 +61,8 @@ def inputbox(display, string_input):
 
     box = pygame.surface.Surface((box_width, box_height))
     save = pygame.surface.Surface((box_width, box_height))
-    box.fill(colours.lightgray)
-    save.fill(colours.lightgray)
+    box.fill(colours.white)
+    save.fill(colours.light_orange)
     pygame.draw.rect(box, colours.black, (0,0, box_width, box_height), 5)
     titleSurf, titleRect = text.text_objects(string_input, text.smallText, colours.black)
     titleRect.center = (box_width / 2, 20)

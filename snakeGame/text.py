@@ -27,7 +27,7 @@ def button(screen, msg, x, y, w, h, color, active_color, action):
     border = 3 # Change Border Thickness
 
     if x + w > mouse[0] > x and y + h > mouse[1] > y:
-        pygame.draw.rect(screen, active_color, (x, y, w, h), 0)
+        pygame.draw.rect(screen, active_color, (x, y, w, h), 0,border, border_top_left_radius=25, border_top_right_radius=25, border_bottom_left_radius=25, border_bottom_right_radius=25)
         if click[0] == 1 and action != None:
 
             if action == "leaderboard":
@@ -35,9 +35,9 @@ def button(screen, msg, x, y, w, h, color, active_color, action):
             else:
                 action()
     else:
-        pygame.draw.rect(screen, color, (x, y, w, h), 0)
+        pygame.draw.rect(screen, color, (x, y, w, h), 0,border_top_left_radius=25, border_top_right_radius=25, border_bottom_left_radius=25, border_bottom_right_radius=25)
 
-    pygame.draw.rect(screen, colours.black, (x, y, w, h), border)
+    pygame.draw.rect(screen, colours.black, (x, y, w, h), border, border_top_left_radius=25, border_top_right_radius=25, border_bottom_left_radius=25, border_bottom_right_radius=25)
     textSurf, textRect = text_objects(msg, smallText, colours.black)
     textRect.center = ((x + (w/2)), (y + (h/2)))
     screen.blit(textSurf, textRect)
