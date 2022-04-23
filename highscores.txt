@@ -1,7 +1,0 @@
-# Highscore Leaderboard
-rekt,11
-david,31
-very unlucky ,1
-misha,37
-Grace K.,18
-david,5
